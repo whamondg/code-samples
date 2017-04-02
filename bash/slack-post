@@ -1,0 +1,49 @@
+
+username='Webhook Bot'
+channel=$1
+token=$2
+emoji=':ghost:'
+
+if [ -z "$channel" ]; then 
+    echo "No channel specified"
+    exit 1
+fi
+
+shift
+shift
+text=$*
+escapedText=$(echo $text | sed 's/"/\"/g' | sed "s/'/\'/g" )
+
+if [ -z "$escapedText" ]; then
+    echo "No text specified"
+    exit 1
+fi
+
+webhookURL="https://hooks.slack.com/services/$token"
+
+read -r -d '' slackPayload << END
+{ 
+  "channel": "#$channel", 
+  "username": "$username", 
+  "text": "$escapedText", 
+  "icon_emoji": "$emoji",
+  "attachments":[
+    {
+      "fallback":"New open task [Urgent]: <http://url_to_task|Test out Slack message attachments>",
+      "pretext":"New open task [Urgent]: <http://url_to_task|Test out Slack message attachments>",
+      "color":"#D00000",
+      "fields":[
+        {
+          "title":"Notes",
+          "value":"This is much easier than I thought it would be.",
+          "short":false
+        }
+      ]
+    }
+  ]
+}
+END
+
+curl -X POST --data-urlencode "payload=$slackPayload" $webhookURL
+
+echo "Done! $|"
