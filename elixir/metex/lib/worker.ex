@@ -12,7 +12,11 @@ defmodule Metex.Worker do
   end
 
   def get_stats(pid) do
-    GenServer.call(pid, {:get_stats})
+    GenServer.call(pid, :get_stats)
+  end
+
+  def reset_stats(pid) do
+    GenServer.cast(pid, :reset_stats)
   end
 
   ## Server Callbacks
@@ -21,7 +25,7 @@ defmodule Metex.Worker do
     {:ok, %{}}
   end
 
-  def handle_call({:get_stats}, _from, stats) do
+  def handle_call(:get_stats, _from, stats) do
     {:reply, stats, stats}
   end
 
@@ -33,6 +37,15 @@ defmodule Metex.Worker do
       _ ->
         {:reply, :error, stats}
     end
+  end
+
+  def handle_cast(:reset_stats, _stats) do
+    {:noreply, %{}}
+  end
+
+  def handle_info(msg, stats) do
+    IO.puts "received #{inspect msg}"
+    {:noreply, stats}
   end
 
   ## Helper Functions
@@ -54,6 +67,7 @@ defmodule Metex.Worker do
   end
 
   defp compute_temperature(json) do
+    IO.puts inspect json
     try do
       temp = (json["main"]["temp"] - 273.15) |> Float.round(1)
       {:ok, temp}
